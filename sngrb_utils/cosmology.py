@@ -56,7 +56,7 @@ def mu(z, pars_cosm):
 
 
 @vectorize(['float64(float64)'])
-def mu_sn_vec(z):
+def mu_cosm_vec(z):
     return mu(z, PARS_COSM)
 
 

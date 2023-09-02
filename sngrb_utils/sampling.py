@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.stats import norm
-import cosmology
+from sngrb_utils import cosmology
 
 ERR_QL = norm.cdf(-1.0)
 ERR_QU = norm.cdf(1.0)
