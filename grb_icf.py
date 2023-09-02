@@ -10,7 +10,7 @@ from sngrb_utils import cosmology, sampling, plotting
 warnings.filterwarnings('ignore')
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 
-sample_size = 10000  # Monte-Carlo sample size
+sample_size = 1000  # Monte-Carlo sample size
 n_threads = cpu_count()
 
 # Reading data from prepared catalogue
@@ -98,7 +98,7 @@ plotting.plot_amati(
     'repeated Theil-Sen estimation')
 
 
-def loopfun_sample_mu_A(i):
+def loopfun_sample_mu_a(i):
     return tuple(
         sampling.sample_mu_a(
             i,
@@ -110,20 +110,20 @@ def loopfun_sample_mu_A(i):
 
 print('Calculating mu_A for sample experiments with Theil-Sen estimated parameters a and b')
 mu_a_all_samples = np.array(list(zip(*Parallel(n_jobs=n_threads, max_nbytes='2048M', verbose=10)(
-    delayed(loopfun_sample_mu_A)(i) for i in np.arange(grb_amount))))).T
+    delayed(loopfun_sample_mu_a)(i) for i in np.arange(grb_amount))))).T
 
 mu_a_meds, mu_a_dlim, mu_a_ulim = sampling.get_meds_and_lims(mu_a_all_samples)
-plotting.plot_hd('HD_ts', z_arr, mu_a_meds, mu_a_dlim, mu_a_ulim)
+plotting.plot_hd('HD_ts', 'direct problem', z_arr, mu_a_meds, mu_a_dlim, mu_a_ulim)
 
 
-def lcdm_inv_residuals(pars, z_arg, alpha_arg, E_p_arg, S_obs_arg, Amx_arg, Amy_arg):
-    mu_a_inner = cosmology.mu_a_vec(z_arg, alpha_arg, E_p_arg, S_obs_arg, pars[0], pars[1], pars[2])
+def lcdm_inv_residuals(pars, z_arg, alpha_arg, e_p_arg, s_obs_arg, amx_arg, amy_arg):
+    mu_a_inner = cosmology.mu_a_vec(z_arg, alpha_arg, e_p_arg, s_obs_arg, pars[0], pars[1], pars[2])
     infinitemask_inner = ~np.isfinite(mu_a_inner)
     mu_a_inner[infinitemask_inner] = 0.0
-    Amy_arg[~np.isfinite(Amy_arg)] = 0.0
-    Amx_arg[~np.isfinite(Amx_arg)] = 0.0
+    amy_arg[~np.isfinite(amy_arg)] = 0.0
+    amx_arg[~np.isfinite(amx_arg)] = 0.0
     residuals_hd = (mu_a_inner - cosmology.mu_cosm_vec(z_arg))
-    residuals_am = (Amy_arg - pars[0] * Amx_arg - pars[
+    residuals_am = (amy_arg - pars[0] * amx_arg - pars[
         1]) * 2.2  # Multiplying by 2.2 to make residuals have similar scale
     return residuals_hd
 
@@ -175,10 +175,10 @@ plotting.plot_corner('cornerplot_icf_k0', {r'$a$': a_inv_k0_sample, r'$b$': b_in
 
 a_inv_k0_est = np.median(a_inv_k0_sample)
 d_a_inv_k0 = (np.percentile(a_inv_k0_sample, 100 * sampling.ERR_QU) - np.percentile(a_inv_k0_sample,
-                                                                                   100 * sampling.ERR_QL)) / 2
+                                                                                    100 * sampling.ERR_QL)) / 2
 b_inv_k0_est = np.median(b_inv_k0_sample)
 d_b_inv_k0 = (np.percentile(b_inv_k0_sample, 100 * sampling.ERR_QU) - np.percentile(b_inv_k0_sample,
-                                                                                   100 * sampling.ERR_QL)) / 2
+                                                                                    100 * sampling.ERR_QL)) / 2
 
 
 def lcdm_residuals_chi2(pars, z_arg, alpha_arg, e_p_arg, s_obs_arg, amx_arg, amy_arg):
@@ -191,32 +191,33 @@ def lcdm_residuals_chi2(pars, z_arg, alpha_arg, e_p_arg, s_obs_arg, amx_arg, amy
     return np.sqrt(np.sum(residuals_hd))
 
 
-def loopfun_sample_mu_A_inv(i):
+def loopfun_sample_mu_a_inv(i):
     return tuple(
-        sampling.sample_mu_a(i, (alpha_all_samples[i, :], e_p_all_samples[i, :], s_obs_all_samples[i, :], z_arr), a_inv_sample,
-                    b_inv_sample, k_inv_sample))
+        sampling.sample_mu_a(i, (alpha_all_samples[i, :], e_p_all_samples[i, :], s_obs_all_samples[i, :], z_arr),
+                             a_inv_sample,
+                             b_inv_sample, k_inv_sample))
 
 
-def loopfun_sample_mu_A_inv_k0(i):
-    return tuple(sampling.sample_mu_a(i, (alpha_all_samples[i, :], e_p_all_samples[i, :], s_obs_all_samples[i, :], z_arr),
+def loopfun_sample_mu_a_inv_k0(i):
+    return tuple(
+        sampling.sample_mu_a(i, (alpha_all_samples[i, :], e_p_all_samples[i, :], s_obs_all_samples[i, :], z_arr),
                              a_inv_k0_sample, b_inv_k0_sample, 0.0))
 
 
 print('Calculating mu_A for sample experiments with parameters a, b and k estimated via ICF')
 mu_a_inv_all_samples = np.array(list(zip(*Parallel(n_jobs=n_threads, max_nbytes='2048M', verbose=10)(
-    delayed(loopfun_sample_mu_A_inv)(i) for i in np.arange(grb_amount))))).T
+    delayed(loopfun_sample_mu_a_inv)(i) for i in np.arange(grb_amount))))).T
 print('Calculating mu_A for sample experiments with parameters a, and b estimated via ICF, fixed k=0')
 mu_a_inv_k0_all_samples = np.array(list(zip(*Parallel(n_jobs=n_threads, max_nbytes='2048M', verbose=10)(
-    delayed(loopfun_sample_mu_A_inv_k0)(i) for i in np.arange(grb_amount))))).T
+    delayed(loopfun_sample_mu_a_inv_k0)(i) for i in np.arange(grb_amount))))).T
 mu_a_inv_all_samples[~np.isfinite(mu_a_inv_all_samples)] = 0.0
 mu_a_inv_k0_all_samples[~np.isfinite(mu_a_inv_k0_all_samples)] = 0.0
 
 mu_a_inv_meds, mu_a_inv_dlim, mu_a_inv_ulim = sampling.get_meds_and_lims(mu_a_inv_all_samples)
 mu_a_inv_k0_meds, mu_a_inv_k0_dlim, mu_a_inv_k0_ulim = sampling.get_meds_and_lims(mu_a_inv_k0_all_samples)
 
-plotting.plot_hd('HD_icf', z_arr, mu_a_inv_meds, mu_a_inv_dlim, mu_a_inv_ulim)
-plotting.plot_hd('HD_icf_k0', z_arr, mu_a_inv_k0_meds, mu_a_inv_k0_dlim, mu_a_inv_k0_ulim)
-
+plotting.plot_hd('HD_icf', r'inverse problem, free $k$', z_arr, mu_a_inv_meds, mu_a_inv_dlim, mu_a_inv_ulim)
+plotting.plot_hd('HD_icf_k0', r'inverse problem, $k=0$', z_arr, mu_a_inv_k0_meds, mu_a_inv_k0_dlim, mu_a_inv_k0_ulim)
 
 plotting.plot_amati(
     (a_inv_sample, b_inv_sample, amx_flat, amy_flat, amx_meds, amy_meds),
