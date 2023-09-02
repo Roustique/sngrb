@@ -10,7 +10,7 @@ from sngrb_utils import cosmology, sampling, plotting
 warnings.filterwarnings('ignore')
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 
-sample_size = 1000  # Monte-Carlo sample size
+sample_size = 10000  # Monte-Carlo sample size
 n_threads = cpu_count()
 
 # Reading data from prepared catalogue
