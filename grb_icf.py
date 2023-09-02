@@ -10,7 +10,7 @@ from sngrb_utils import cosmology, sampling, plotting
 warnings.filterwarnings('ignore')
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 
-sample_size = 1000  # Monte-Carlo sample size
+sample_size = 10000  # Monte-Carlo sample size
 n_threads = cpu_count()
 
 # Reading data from prepared catalogue
@@ -125,11 +125,11 @@ def lcdm_inv_residuals(pars, z_arg, alpha_arg, E_p_arg, S_obs_arg, Amx_arg, Amy_
     residuals_hd = (mu_a_inner - cosmology.mu_cosm_vec(z_arg))
     residuals_am = (Amy_arg - pars[0] * Amx_arg - pars[
         1]) * 2.2  # Multiplying by 2.2 to make residuals have similar scale
-    return np.concatenate((residuals_hd, residuals_am))
+    return residuals_hd
 
 
 def loopfun_icf(i):
-    return tuple(least_squares(lcdm_inv_residuals, (1.0, 50.0, 0.0), loss='soft_l1', f_scale=2.5, args=(
+    return tuple(least_squares(lcdm_inv_residuals, (1.0, 50.0, 0.0), loss='soft_l1', f_scale=1.25, args=(
         z_arr, alpha_all_samples[:, i], e_p_all_samples[:, i], s_obs_all_samples[:, i], amx_all_samples[:, i],
         amy_all_samples[:, i])).x)
 
@@ -158,11 +158,11 @@ def lcdm_inv_residuals_k0(pars, z_arg, alpha_arg, e_p_arg, s_obs_arg, amx_arg, a
     residuals_hd = (mu_a_inner - cosmology.mu_cosm_vec(z_arg))
     residuals_am = (amy_arg - pars[0] * amx_arg - pars[
         1]) * 2.2  # Multiplying by 2.2 to make residuals have similar scale
-    return np.concatenate((residuals_hd, residuals_am))
+    return residuals_hd
 
 
 def loopfun_icf_k0(i):
-    return tuple(least_squares(lcdm_inv_residuals_k0, (1.0, 50.0), loss='soft_l1', f_scale=2.5, args=(
+    return tuple(least_squares(lcdm_inv_residuals_k0, (1.0, 50.0), loss='soft_l1', f_scale=1.25, args=(
         z_arr, alpha_all_samples[:, i], e_p_all_samples[:, i], s_obs_all_samples[:, i], amx_all_samples[:, i],
         amy_all_samples[:, i])).x)
 
