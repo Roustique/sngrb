@@ -1,21 +1,21 @@
 import numpy as np
-from scipy.optimize import least_squares, curve_fit, fmin
+from scipy.optimize import least_squares, curve_fit
 from scipy.stats.mstats import theilslopes
-from scipy.stats import skewnorm, norm, multivariate_normal
+from scipy.stats import norm, multivariate_normal
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import rc, rcParams
 import corner
 from joblib import Parallel, delayed, cpu_count
-from numba import jit, vectorize
+from numba import jit
 import warnings
 from sngrb_utils import sampling
 
 warnings.filterwarnings('ignore')
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 
-paper_linewidth = 3.37689 #Ширина колонки текста в MNRAS-овском шаблоне
-paper_textwidth = 7.03058 #Ширина страницы в MNRAS-овском шаблоне
+paper_linewidth = 3.37689  #Ширина колонки текста в MNRAS-овском шаблоне
+paper_textwidth = 7.03058  #Ширина страницы в MNRAS-овском шаблоне
 
 #Натройка шрифтов в matplotlib:
 rc('font', family = 'Times New Roman')
